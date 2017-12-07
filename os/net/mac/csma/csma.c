@@ -49,6 +49,10 @@
 #define LOG_MODULE "CSMA"
 #define LOG_LEVEL LOG_LEVEL_MAC
 
+uint32_t csma_received_packets;
+uint32_t csma_invalid_packets;
+uint32_t csma_duplicate_packets;
+
 /*---------------------------------------------------------------------------*/
 static void
 send_packet(mac_callback_t sent, void *ptr)
@@ -72,12 +76,15 @@ input_packet(void)
     LOG_DBG("ignored ack\n");
   } else if(NETSTACK_FRAMER.parse() < 0) {
     LOG_ERR("failed to parse %u\n", packetbuf_datalen());
+    csma_invalid_packets++;
   } else if(!linkaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_RECEIVER),
                                          &linkaddr_node_addr) &&
             !packetbuf_holds_broadcast()) {
     LOG_WARN("not for us\n");
   } else {
     int duplicate = 0;
+
+    csma_received_packets++;
 
     /* Check for duplicate packet. */
     duplicate = mac_sequence_is_duplicate();
@@ -86,6 +93,7 @@ input_packet(void)
       LOG_WARN("drop duplicate link layer packet from ");
       LOG_WARN_LLADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
       LOG_WARN_(", seqno %u\n", packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO));
+      csma_duplicate_packets++;
     } else {
       mac_sequence_register_seqno();
     }

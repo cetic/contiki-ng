@@ -137,6 +137,16 @@ LIST(neighbor_list);
 
 static void packet_sent(void *ptr, int status, int num_transmissions);
 static void transmit_from_queue(void *ptr);
+
+uint32_t csma_packet_overflow;
+uint32_t csma_neighbor_overflow;
+
+uint32_t csma_sent_packets;
+uint32_t csma_noack;
+uint32_t csma_collisions;
+uint32_t csma_retransmissions;
+uint32_t csma_dropped;
+
 /*---------------------------------------------------------------------------*/
 static struct neighbor_queue *
 neighbor_queue_from_addr(const linkaddr_t *addr)
@@ -354,6 +364,7 @@ tx_done(int status, struct packet_queue *q, struct neighbor_queue *n)
 static void
 rexmit(struct packet_queue *q, struct neighbor_queue *n)
 {
+  csma_retransmissions++;
   schedule_transmission(n);
   /* This is needed to correctly attribute energy that we spent
      transmitting this packet. */
@@ -368,6 +379,7 @@ collision(struct packet_queue *q, struct neighbor_queue *n,
 
   metadata = (struct qbuf_metadata *)q->ptr;
 
+  csma_collisions += num_transmissions;
   n->collisions += num_transmissions;
 
   if(n->collisions > CSMA_MAX_BACKOFF) {
@@ -377,6 +389,7 @@ collision(struct packet_queue *q, struct neighbor_queue *n,
   }
 
   if(n->transmissions >= metadata->max_transmissions) {
+    csma_dropped++;
     tx_done(MAC_TX_COLLISION, q, n);
   } else {
     rexmit(q, n);
@@ -390,10 +403,13 @@ noack(struct packet_queue *q, struct neighbor_queue *n, int num_transmissions)
 
   metadata = (struct qbuf_metadata *)q->ptr;
 
+  csma_noack++;
+  csma_sent_packets += num_transmissions;
   n->collisions = 0;
   n->transmissions += num_transmissions;
 
   if(n->transmissions >= metadata->max_transmissions) {
+    csma_dropped++;
     tx_done(MAC_TX_NOACK, q, n);
   } else {
     rexmit(q, n);
@@ -403,6 +419,7 @@ noack(struct packet_queue *q, struct neighbor_queue *n, int num_transmissions)
 static void
 tx_ok(struct packet_queue *q, struct neighbor_queue *n, int num_transmissions)
 {
+  csma_sent_packets += num_transmissions;
   n->collisions = 0;
   n->transmissions += num_transmissions;
   tx_done(MAC_TX_OK, q, n);
@@ -548,8 +565,10 @@ csma_output_packet(mac_callback_t sent, void *ptr)
       LOG_WARN("Neighbor queue full\n");
     }
     LOG_WARN("could not allocate packet, dropping packet\n");
+    csma_packet_overflow++;
   } else {
     LOG_WARN("could not allocate neighbor, dropping packet\n");
+    csma_neighbor_overflow++;
   }
   mac_call_sent_callback(sent, ptr, MAC_TX_ERR, 1);
 }
