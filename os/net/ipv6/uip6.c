@@ -80,6 +80,7 @@
 #include "net/ipv6/uip-ds6.h"
 #include "net/ipv6/multicast/uip-mcast6.h"
 #include "net/routing/routing.h"
+#include "net/ipv6/multicast/uip-mld.h"
 
 #if UIP_ND6_SEND_NS
 #include "net/ipv6/uip-ds6-nbr.h"
@@ -434,6 +435,9 @@ uip_init(void)
 
 #if UIP_IPV6_MULTICAST
   UIP_MCAST6.init();
+#endif
+#if UIP_CONF_MLD
+  uip_mld_init();
 #endif
 }
 /*---------------------------------------------------------------------------*/
