@@ -438,6 +438,25 @@ uip_ds6_get_global(int8_t state)
 }
 
 /*---------------------------------------------------------------------------*/
+/*
+ * get the number of configured address -
+ * state = -1 => any address is ok. Otherwise state = desired state of addr.
+ * (TENTATIVE, PREFERRED, DEPRECATED)
+ */
+int
+uip_ds6_get_addr_number(int8_t state)
+{
+  int count = 0;
+  for(locaddr = uip_ds6_if.addr_list;
+      locaddr < uip_ds6_if.addr_list + UIP_DS6_ADDR_NB; locaddr++) {
+    if(locaddr->isused && (state == -1 || locaddr->state == state)) {
+      count++;
+    }
+  }
+  return count;
+}
+
+/*---------------------------------------------------------------------------*/
 uip_ds6_maddr_t *
 uip_ds6_maddr_add(const uip_ipaddr_t *ipaddr)
 {
