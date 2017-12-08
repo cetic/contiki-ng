@@ -360,7 +360,14 @@ rpl_set_root(uint8_t instance_id, uip_ipaddr_t *dag_id)
   uint8_t version;
   int i;
 
+#if CETIC_6LBR
+  version = nvm_data.rpl_version_id;
+  RPL_LOLLIPOP_INCREMENT(version);
+  nvm_data.rpl_version_id = version;
+  store_nvm_config();
+#else
   version = RPL_LOLLIPOP_INIT;
+#endif
   instance = rpl_get_instance(instance_id);
   if(instance != NULL) {
     for(i = 0; i < RPL_MAX_DAG_PER_INSTANCE; ++i) {
@@ -369,6 +376,10 @@ rpl_set_root(uint8_t instance_id, uip_ipaddr_t *dag_id)
         if(uip_ipaddr_cmp(&dag->dag_id, dag_id)) {
           version = dag->version;
           RPL_LOLLIPOP_INCREMENT(version);
+#if CETIC_6LBR
+          nvm_data.rpl_version_id = version;
+          store_nvm_config();
+#endif
         }
         if(dag == dag->instance->current_dag) {
           PRINTF("RPL: Dropping a joined DAG when setting this node as root");
@@ -459,6 +470,10 @@ rpl_repair_root(uint8_t instance_id)
 
   RPL_LOLLIPOP_INCREMENT(instance->current_dag->version);
   RPL_LOLLIPOP_INCREMENT(instance->dtsn_out);
+#if CETIC_6LBR
+  nvm_data.rpl_version_id = instance->current_dag->version;
+  store_nvm_config();
+#endif
   PRINTF("RPL: rpl_repair_root initiating global repair with version %d\n", instance->current_dag->version);
   rpl_reset_dio_timer(instance);
   return 1;
@@ -1478,6 +1493,10 @@ rpl_process_dio(uip_ipaddr_t *from, rpl_dio_t *dio)
         dag->version = dio->version;
         RPL_LOLLIPOP_INCREMENT(dag->version);
         rpl_reset_dio_timer(instance);
+#if CETIC_6LBR
+        nvm_data.rpl_version_id = dag->version;
+        store_nvm_config();
+#endif
       } else {
         PRINTF("RPL: Global repair\n");
         if(dio->prefix_info.length != 0) {
