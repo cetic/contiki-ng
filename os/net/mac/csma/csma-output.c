@@ -55,6 +55,10 @@
 #include "sys/cooja_mt.h"
 #endif /* CONTIKI_TARGET_COOJA */
 
+#if CETIC_6LBR_MULTI_RADIO
+#include "multi-radio.h"
+#endif
+
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "CSMA"
@@ -95,6 +99,9 @@ struct qbuf_metadata {
   mac_callback_t sent;
   void *cptr;
   uint8_t max_transmissions;
+#if CETIC_6LBR_MULTI_RADIO
+  uint8_t ifindex;
+#endif
 };
 
 /* Every neighbor has its own packet queue */
@@ -284,6 +291,11 @@ transmit_from_queue(void *ptr)
       LOG_INFO_(", seqno %u, tx %u, queue %d\n",
         queuebuf_attr(q->buf, PACKETBUF_ATTR_MAC_SEQNO),
         n->transmissions, list_length(n->packet_queue));
+#if CETIC_6LBR_MULTI_RADIO
+      /* Find out what interface we should use... */
+      struct qbuf_metadata *metadata = (struct qbuf_metadata *)q->ptr;
+      multi_radio_output_ifindex = metadata->ifindex;
+#endif
       /* Send first packet in the neighbor queue */
       queuebuf_to_packetbuf(q->buf);
       send_one_packet(n);
@@ -439,8 +451,15 @@ packet_sent(void *ptr, int status, int num_transmissions)
   /* Find out what packet this callback refers to */
   for(q = list_head(n->packet_queue);
       q != NULL; q = list_item_next(q)) {
+#if CETIC_6LBR_MULTI_RADIO
+    if(queuebuf_attr(q->buf, PACKETBUF_ATTR_MAC_SEQNO) ==
+       packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO) &&
+       (q->ptr == NULL ||
+        ((struct qbuf_metadata *)q->ptr)->ifindex == multi_radio_input_ifindex)) {
+#else
     if(queuebuf_attr(q->buf, PACKETBUF_ATTR_MAC_SEQNO) ==
        packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO)) {
+#endif
       break;
     }
   }
@@ -536,6 +555,9 @@ csma_output_packet(mac_callback_t sent, void *ptr)
             }
             metadata->sent = sent;
             metadata->cptr = ptr;
+#if CETIC_6LBR_MULTI_RADIO
+            metadata->ifindex = multi_radio_output_ifindex;
+#endif
             list_add(n->packet_queue, q);
 
             LOG_INFO("sending to ");
