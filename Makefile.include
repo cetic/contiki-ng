@@ -384,7 +384,7 @@ ifndef CUSTOM_RULE_LINK
 %.$(TARGET): %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB)
 	$(TRACE_LD)
 	$(Q)$(LD) $(LDFLAGS) $(TARGET_STARTFILES) ${filter-out %.a,$^} \
-	    ${filter %.a,$^} $(TARGET_LIBFILES) -o $@
+	    ${filter %.a,$^} $(TARGET_LIBFILES) $(LDFLAGS_AFTER) -o $@
 endif
 
 %.ramprof: %.$(TARGET)
