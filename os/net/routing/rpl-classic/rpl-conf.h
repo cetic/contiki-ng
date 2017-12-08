@@ -82,8 +82,10 @@
 #define RPL_IS_NON_STORING(instance) (RPL_WITH_NON_STORING && ((instance) != NULL) && ((instance)->mop == RPL_MOP_NON_STORING))
 
 /* Emit a pre-processor error if the user configured multicast with bad MOP */
+#if !CETIC_6LBR_RPL_RUNTIME_MOP
 #if RPL_WITH_MULTICAST && (RPL_MOP_DEFAULT != RPL_MOP_STORING_MULTICAST)
 #error "RPL Multicast requires RPL_MOP_DEFAULT==3. Check contiki-conf.h"
+#endif
 #endif
 
 /* Set to 1 to enable RPL statistics */

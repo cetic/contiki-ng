@@ -276,6 +276,7 @@ handle_dao_timer(void *ptr)
     dao_output(instance->current_dag->preferred_parent, instance->default_lifetime);
 
 #if RPL_WITH_MULTICAST
+    if(RPL_WITH_MULTICAST_TEST()) {
     /* Send DAOs for multicast prefixes only if the instance is in MOP 3 */
     if(instance->mop == RPL_MOP_STORING_MULTICAST) {
       /* Send a DAO for own multicast addresses */
@@ -297,6 +298,7 @@ handle_dao_timer(void *ptr)
         }
         mcast_route = list_item_next(mcast_route);
       }
+    }
     }
 #endif
   } else {
