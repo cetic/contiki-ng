@@ -74,6 +74,9 @@
 #include "net/ipv6/uip-ds6.h"
 #include "net/ipv6/uip-nameserver.h"
 #include "lib/random.h"
+#if CETIC_6LBR_TRANSPARENTBRIDGE || CETIC_6LBR_SMARTBRIDGE
+#include "cetic-6lbr.h"
+#endif
 #if UIP_CONF_DS6_ROUTE_INFORMATION || CETIC_6LBR
 #include "rio.h"
 #endif
@@ -134,7 +137,9 @@ static uip_ds6_route_info_t *rtinfo; /**  Pointer to a route information list en
 #endif
 #endif
 #if (!UIP_CONF_ROUTER || UIP_ND6_SEND_RA)
+#if !CETIC_6LBR_SMARTBRIDGE
 static uip_ds6_prefix_t *prefix; /**  Pointer to a prefix list entry */
+#endif
 #endif
 
 #if UIP_ND6_SEND_NA || UIP_ND6_SEND_RA || !UIP_CONF_ROUTER
@@ -976,6 +981,7 @@ ra_input(void)
           uip_ntohl(nd6_opt_prefix_info->preferredlt))
          && (!uip_is_addr_linklocal(&nd6_opt_prefix_info->prefix))) {
         /* on-link flag related processing */
+#if !CETIC_6LBR_SMARTBRIDGE
         if(nd6_opt_prefix_info->flagsreserved1 & UIP_ND6_RA_FLAG_ONLINK) {
           prefix =
             uip_ds6_prefix_lookup(&nd6_opt_prefix_info->prefix,
@@ -1011,6 +1017,7 @@ ra_input(void)
             }
           }
         }
+#endif
         /* End of on-link flag related processing */
         /* autonomous flag related processing */
         if((nd6_opt_prefix_info->flagsreserved1 & UIP_ND6_RA_FLAG_AUTONOMOUS)
@@ -1051,6 +1058,9 @@ ra_input(void)
                                ADDR_AUTOCONF);
             }
           }
+#if CETIC_6LBR_SMARTBRIDGE
+          cetic_6lbr_set_prefix(&nd6_opt_prefix_info->prefix, 64, &ipaddr);
+#endif
         }
         /* End of autonomous flag related processing */
       }
