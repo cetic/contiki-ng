@@ -1106,6 +1106,14 @@ rpl_find_of(rpl_ocp_t ocp)
   return NULL;
 }
 /*---------------------------------------------------------------------------*/
+static void
+rpl_update_dag(rpl_instance_t *instance, rpl_dag_t *dag, rpl_dio_t *dio)
+{
+  dag->grounded = dio->grounded;
+  dag->preference = dio->preference;
+  dag->lifetime = (1UL << (instance->dio_intmin + instance->dio_intdoubl)) * RPL_DAG_LIFETIME / 1000;
+}
+/*---------------------------------------------------------------------------*/
 void
 rpl_join_instance(uip_ipaddr_t *from, rpl_dio_t *dio)
 {
@@ -1603,6 +1611,7 @@ rpl_process_dio(uip_ipaddr_t *from, rpl_dio_t *dio)
    * whether to keep it in the set.
    */
 
+  rpl_update_dag(instance, dag, dio);
   p = rpl_find_parent(dag, from);
   if(p == NULL) {
     previous_dag = find_parent_dag(instance, from);
