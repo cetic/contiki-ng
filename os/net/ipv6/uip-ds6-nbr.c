@@ -54,6 +54,10 @@
 #include "net/ipv6/uip-ds6-nbr.h"
 #include "net/ipv6/uip-nd6.h"
 #include "net/routing/routing.h"
+#if UIP_SWITCH_LOOKUP
+#include "switch-lookup.h"
+#include "network-itf.h"
+#endif
 
 /* Log configuration */
 #include "sys/log.h"
@@ -96,6 +100,10 @@ uip_ds6_nbr_add(const uip_ipaddr_t *ipaddr, const uip_lladdr_t *lladdr,
     stimer_set(&nbr->sendns, 0);
     nbr->nscount = 0;
 #endif /* UIP_ND6_SEND_NS */
+#if UIP_SWITCH_LOOKUP
+    /* interface is not yet known */
+    nbr->ifindex = NETWORK_ITF_UNKNOWN;
+#endif
     LOG_INFO("Adding neighbor with ip addr ");
     LOG_INFO_6ADDR(ipaddr);
     LOG_INFO_(" link addr ");
