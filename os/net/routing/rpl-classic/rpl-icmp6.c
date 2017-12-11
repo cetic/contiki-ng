@@ -63,6 +63,10 @@
 
 #include "net/ipv6/uip-debug.h"
 
+#if CETIC_6LBR
+#include "6lbr-hooks.h"
+#endif
+
 /*---------------------------------------------------------------------------*/
 #define RPL_DIO_GROUNDED                 0x80
 #define RPL_DIO_MOP_SHIFT                3
@@ -222,6 +226,13 @@ dis_input(void)
   PRINTF("RPL: Received a DIS from ");
   PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
   PRINTF("\n");
+
+#if CETIC_6LBR
+  if(!cetic_6lbr_dis_input_hook()) {
+    uip_clear_buf();
+    return;
+  }
+#endif
 
   for(instance = &instance_table[0], end = instance + RPL_MAX_INSTANCES;
       instance < end; ++instance) {
@@ -833,6 +844,18 @@ dao_input_storing(void)
     }
     return;
   }
+
+#if CETIC_6LBR
+  if(!cetic_6lbr_allowed_node_hook(dag, &prefix, prefixlen)) {
+    if(flags & RPL_DAO_K_FLAG) {
+      /* signal the failure to add the node */
+      dao_ack_output(instance, &dao_sender_addr, sequence,
+             is_root ? RPL_DAO_ACK_UNABLE_TO_ADD_ROUTE_AT_ROOT :
+             RPL_DAO_ACK_UNABLE_TO_ACCEPT);
+    }
+    return;
+  }
+#endif
 
   rep = rpl_add_route(dag, &prefix, prefixlen, &dao_sender_addr);
   if(rep == NULL) {
