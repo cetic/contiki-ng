@@ -53,6 +53,11 @@
 #include "net/ipv6/multicast/uip-mld.h"
 #include "net/ipv6/uip-packetqueue.h"
 
+#if CETIC_6LBR
+#define LOG6LBR_MODULE "DS6"
+#include "log-6lbr.h"
+#endif
+
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "IPv6 DS"
@@ -671,6 +676,9 @@ uip_ds6_dad(uip_ds6_addr_t *addr)
 int
 uip_ds6_dad_failed(uip_ds6_addr_t *addr)
 {
+#if CETIC_6LBR
+  LOG6LBR_6ADDR(ERROR, &addr->ipaddr, "Address is already used : ");
+#endif
   if(uip_is_addr_linklocal(&addr->ipaddr)) {
     LOG_ERR("Contiki shutdown, DAD for link local address failed\n");
     return 0;
