@@ -294,6 +294,11 @@ echo_reply_input(void)
   LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
   LOG_INFO_("\n");
 
+#if CETIC_6LBR_TRACE_PING
+  //TODO: Replace with proper callback
+  printf("Received an icmp6 echo reply\n");
+#endif
+
   uip_ipaddr_copy(&sender, &UIP_IP_BUF->srcipaddr);
   ttl = UIP_IP_BUF->ttl;
 
