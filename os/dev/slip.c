@@ -32,9 +32,18 @@
 #include "net/ipv6/uip.h"
 #include "dev/slip.h"
 
+#if CETIC_6LBR && TARGET_CONTIKI_NATIVE
+#include "native-config.h"
+#endif
+
+#define DEBUG 0
+#if DEBUG
 #include <stdio.h>
-#include <string.h>
-/*---------------------------------------------------------------------------*/
+#define PRINTF(...) printf(__VA_ARGS__)
+#else /* DEBUG */
+#define PRINTF(...)
+#endif /* DEBUG */
+
 #define SLIP_END     0300
 #define SLIP_ESC     0333
 #define SLIP_ESC_END 0334
@@ -90,6 +99,25 @@ slip_set_input_callback(void (*c)(void))
   input_callback = c;
 }
 /*---------------------------------------------------------------------------*/
+#if SLIP_CRC_ON
+/* Polynomial ^8 + ^5 + ^4 + 1 */
+static uint8_t
+crc8_add(uint8_t acc, uint8_t byte)
+{
+  int i;
+  acc ^= byte;
+  for(i = 0; i < 8; i++) {
+    if(acc & 1) {
+      acc = (acc >> 1) ^ 0x8c;
+    } else {
+      acc >>= 1;
+    }
+  }
+
+  return acc;
+}
+#endif /* SLIP_CRC_ON */
+/*---------------------------------------------------------------------------*/
 void
 slip_send(void)
 {
@@ -102,11 +130,20 @@ slip_write(const void *_ptr, int len)
   const uint8_t *ptr = _ptr;
   uint16_t i;
   uint8_t c;
+#if SLIP_CRC_ON
+  uint8_t crc = 0;
+#endif
 
   slip_arch_writeb(SLIP_END);
 
   for(i = 0; i < len; ++i) {
     c = *ptr++;
+#if SLIP_CRC_ON
+#if CETIC_6LBR && TARGET_CONTIKI_NATIVE
+    if(sixlbr_config_slip_crc8)
+#endif
+    crc = crc8_add(crc, c);
+#endif
     if(c == SLIP_END) {
       slip_arch_writeb(SLIP_ESC);
       c = SLIP_ESC_END;
@@ -116,6 +153,24 @@ slip_write(const void *_ptr, int len)
     }
     slip_arch_writeb(c);
   }
+
+#if SLIP_CRC_ON
+#if CETIC_6LBR && TARGET_CONTIKI_NATIVE
+    if(sixlbr_config_slip_crc8) {
+#endif
+  /* Write the checksum byte */
+  if(crc == SLIP_END) {
+     slip_arch_writeb(SLIP_ESC);
+     crc = SLIP_ESC_END;
+  } else if (crc == SLIP_ESC)  {
+     slip_arch_writeb(SLIP_ESC);
+     crc = SLIP_ESC_ESC;
+  }
+  slip_arch_writeb(crc);
+#if CETIC_6LBR && TARGET_CONTIKI_NATIVE
+  }
+#endif
+#endif
 
   slip_arch_writeb(SLIP_END);
 }
@@ -240,6 +295,27 @@ slip_poll_handler(uint8_t *outbuf, uint16_t blen)
     } else {
       begin = pkt_end;
     }
+
+#if SLIP_CRC_ON
+    if(len > 0)
+    {
+      /* Check if the CRC is as expected */
+      uint8_t crc = 0;
+      unsigned i;
+      for(i = 0; i < len; i++) {
+        crc = crc8_add(crc, outbuf[i]);
+      }
+      if(crc != 0) {
+        /* Set the length to zero to signal a problem */
+        PRINTF("SLIP: bad incoming checksum\n");
+        len = 0;
+      } else {
+        /* Reduce the length by the size of the checksum */
+        len -= 1;
+      }
+    }
+#endif
+
     return len;
   }
 

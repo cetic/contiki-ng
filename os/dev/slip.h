@@ -36,6 +36,13 @@
 
 #include "contiki.h"
 
+/* Include CRC in SLIP messages? */
+#ifdef SLIP_CONF_CRC_ON
+#define SLIP_CRC_ON SLIP_CONF_CRC_ON
+#else
+#define SLIP_CRC_ON 0
+#endif
+
 PROCESS_NAME(slip_process);
 
 /**
