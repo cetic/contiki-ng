@@ -50,6 +50,15 @@
 
 #include <string.h>
 
+#if CETIC_6LBR
+#include "cetic-6lbr.h"
+#include "rpl-utils.h"
+#endif
+#if CETIC_6LBR_WITH_IP64
+#include "ip64.h"
+#include "ip64-addr.h"
+#endif
+
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "TCP/IP"
@@ -527,6 +536,30 @@ get_nexthop(uip_ipaddr_t *addr)
 
   /* No route was found - we send to the default route instead. */
   if(route == NULL) {
+#if CETIC_6LBR_SMARTBRIDGE
+        if (uip_ipaddr_prefixcmp(&wsn_net_prefix, &UIP_IP_BUF->destipaddr, 64)) {
+          /* In smart-bridge mode, there is no route towards hosts on the Ethernet side
+          Therefore we have to check the destination and assume the host is on-link */
+          nexthop = &UIP_IP_BUF->destipaddr;
+        } else
+#endif
+#if CETIC_6LBR_ROUTER && UIP_CONF_IPV6_RPL
+        if (is_dodag_root() && uip_ipaddr_prefixcmp(&wsn_net_prefix, &UIP_IP_BUF->destipaddr, 64)) {
+          /* In router mode, we drop packets towards unknown WSN Node */
+          LOG_INFO("Dropping wsn packet with no route\n");
+          nexthop = NULL;
+        } else
+#endif
+#if CETIC_6LBR_WITH_IP64
+        if(ip64_addr_is_ip64(&UIP_IP_BUF->destipaddr)) {
+#if UIP_CONF_IPV6_RPL
+          rpl_ext_header_remove();
+#endif
+          IP64_CONF_UIP_FALLBACK_INTERFACE.output();
+          nexthop = NULL;
+        }
+        else
+#endif
     nexthop = uip_ds6_defrt_choose();
     if(nexthop == NULL) {
       output_fallback();
