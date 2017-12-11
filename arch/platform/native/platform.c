@@ -201,6 +201,7 @@ set_lladdr(void)
 }
 /*---------------------------------------------------------------------------*/
 #if NETSTACK_CONF_WITH_IPV6
+#if !CETIC_6LBR
 static void
 set_global_address(void)
 {
@@ -226,6 +227,7 @@ set_global_address(void)
   uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 1);
   uip_ds6_defrt_add(&ipaddr, 0);
 }
+#endif
 #endif
 /*---------------------------------------------------------------------------*/
 int contiki_argc = 0;
@@ -275,7 +277,9 @@ platform_init_stage_three()
   process_start(&wpcap_process, NULL);
 #endif
 
+#if !CETIC_6LBR
   set_global_address();
+#endif
 
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
