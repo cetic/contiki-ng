@@ -676,6 +676,11 @@ tcpip_ipv6_output(void)
   if(uip_len == 0) {
     return;
   }
+  LOG_INFO("IPv6 packet send from ");
+  LOG_INFO_6ADDR(&UIP_IP_BUF->srcipaddr);
+  LOG_INFO_(" to ");
+  LOG_INFO_6ADDR(&UIP_IP_BUF->destipaddr);
+  LOG_INFO_("\n");
 
   if(uip_len > UIP_LINK_MTU) {
     LOG_ERR("output: Packet too big");
