@@ -78,6 +78,9 @@
 #define LOG6LBR_MODULE "ND6"
 #include "cetic-6lbr.h"
 #include "nvm-config.h"
+#if CETIC_6LBR_NODE_INFO
+#include "node-info.h"
+#endif
 #include "log-6lbr.h"
 #endif
 #if UIP_CONF_DS6_ROUTE_INFORMATION || CETIC_6LBR
@@ -553,6 +556,9 @@ na_input(void)
   if ( (nvm_data.mode & CETIC_MODE_SMART_MULTI_BR) != 0 ) {
     if (uip_is_addr_mcast(&UIP_IP_BUF->destipaddr) && uip_is_mcast_group_id_all_nodes(&UIP_IP_BUF->destipaddr)) {
       LOG6LBR_6ADDR(INFO, &UIP_ND6_NA_BUF->tgtipaddr, "Received purge NA for ");
+#if CETIC_6LBR_NODE_INFO
+      node_info_rm_by_addr(&UIP_ND6_NA_BUF->tgtipaddr);
+#endif
       route = uip_ds6_route_lookup(&UIP_ND6_NA_BUF->tgtipaddr);
       if (route != NULL ) {
           uip_ds6_route_rm(route);

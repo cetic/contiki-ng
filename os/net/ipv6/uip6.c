@@ -86,6 +86,11 @@
 #include "net/ipv6/uip-ds6-nbr.h"
 #endif /* UIP_ND6_SEND_NS */
 
+#if CETIC_6LBR_NODE_INFO
+#include "packet-forwarding-engine.h"
+#include "node-info.h"
+#endif
+
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "IPv6"
@@ -1173,6 +1178,12 @@ uip_process(uint8_t flag)
     }
   }
 
+#if CETIC_6LBR_NODE_INFO
+  if(packet_filter_wsn_packet) {
+    /* Take only into account packets coming directly from the WSN interface */
+    node_info_node_seen(&UIP_IP_BUF->srcipaddr, UIP_TTL - (int)UIP_IP_BUF->ttl + 1);
+  }
+#endif
   /*
    * Process Packets with a routable multicast destination:
    * - We invoke the multicast engine and let it do its thing
