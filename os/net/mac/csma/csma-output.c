@@ -161,6 +161,15 @@ uint32_t csma_retransmissions;
 uint32_t csma_dropped;
 
 /*---------------------------------------------------------------------------*/
+int csma_allocated_packets(void)
+{
+  return MAX_QUEUED_PACKETS - memb_numfree(&packet_memb);
+}
+int csma_allocated_neighbors(void)
+{
+  return CSMA_MAX_NEIGHBOR_QUEUES - memb_numfree(&neighbor_memb);
+}
+/*---------------------------------------------------------------------------*/
 static struct neighbor_queue *
 neighbor_queue_from_addr(const linkaddr_t *addr)
 {
