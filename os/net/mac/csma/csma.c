@@ -102,10 +102,18 @@ input_packet(void)
     {
       frame802154_t info154;
       frame802154_parse(original_dataptr, original_datalen, &info154);
+#if CETIC_6LBR_TRANSPARENT_BRIDGE
       if(info154.fcf.frame_type == FRAME802154_DATAFRAME &&
          info154.fcf.ack_required != 0 &&
-         linkaddr_cmp((linkaddr_t *)&info154.dest_addr,
-                      &linkaddr_node_addr)) {
+         (linkaddr_cmp((linkaddr_t *)&info154.dest_addr,
+                      &linkaddr_node_addr) ||
+          IS_EUI48_ADDR((linkaddr_t *)&info154.dest_addr))) {
+#else
+        if(info154.fcf.frame_type == FRAME802154_DATAFRAME &&
+           info154.fcf.ack_required != 0 &&
+           linkaddr_cmp((linkaddr_t *)&info154.dest_addr,
+                        &linkaddr_node_addr)) {
+#endif
         uint8_t ackdata[CSMA_ACK_LEN] = {0, 0, 0};
 
         ackdata[0] = FRAME802154_ACKFRAME;

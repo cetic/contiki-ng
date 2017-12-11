@@ -64,6 +64,12 @@
 #define LOG_MODULE "CSMA"
 #define LOG_LEVEL LOG_LEVEL_MAC
 
+#if CETIC_6LBR_TRANSPARENT_BRIDGE
+#define IS_EUI48_ADDR(a) ((a) != NULL && (a)->u8[3] == CETIC_6LBR_ETH_EXT_A && (a)->u8[4] == CETIC_6LBR_ETH_EXT_B )
+#define CETIC_6LBR_ETH_EXT_A    0xFF
+#define CETIC_6LBR_ETH_EXT_B    0xFF
+#endif
+
 /* Constants of the IEEE 802.15.4 standard */
 
 /* macMinBE: Initial backoff exponent. Range 0--CSMA_MAX_BE */
