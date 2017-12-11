@@ -97,6 +97,7 @@ main(void)
   LOG_INFO_("\n");
 
 #if NETSTACK_CONF_WITH_IPV6
+#if !CETIC_6LBR
   {
     uip_ds6_addr_t *lladdr;
     memcpy(&uip_lladdr.addr, &linkaddr_node_addr, sizeof(uip_lladdr.addr));
@@ -107,6 +108,9 @@ main(void)
     LOG_INFO_6ADDR(lladdr != NULL ? &lladdr->ipaddr : NULL);
     LOG_INFO_("\n");
   }
+#else /* !CETIC_6LBR */
+  memcpy(&uip_lladdr.addr, &linkaddr_node_addr, sizeof(uip_lladdr.addr));
+#endif /* !CETIC_6LBR */
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
   platform_init_stage_three();
