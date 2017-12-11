@@ -58,6 +58,11 @@
 #include <limits.h>
 #include <string.h>
 
+#if CETIC_6LBR_SMARTBRIDGE
+extern void
+send_purge_na(uip_ipaddr_t *prefix);
+#endif
+
 #if RPL_CONF_STATS
 rpl_stats_t rpl_stats;
 #endif
@@ -240,6 +245,9 @@ rpl_add_route(rpl_dag_t *dag, uip_ipaddr_t *prefix, int prefix_len,
     PRINTF("RPL: No space for more route entries\n");
     return NULL;
   }
+#if CETIC_6LBR_SMARTBRIDGE
+  send_purge_na(prefix);
+#endif
 
   rep->state.dag = dag;
   rep->state.lifetime = RPL_LIFETIME(dag->instance, dag->instance->default_lifetime);
