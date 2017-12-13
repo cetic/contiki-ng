@@ -103,10 +103,10 @@ UIP_ICMP6_HANDLER(dao_handler, ICMP6_RPL, RPL_CODE_DAO, dao_input);
 UIP_ICMP6_HANDLER(dao_ack_handler, ICMP6_RPL, RPL_CODE_DAO_ACK, dao_ack_input);
 /*---------------------------------------------------------------------------*/
 
-#if RPL_WITH_DAO_ACK
 static uip_ds6_route_t *
 find_route_entry_by_dao_ack(uint8_t seq)
 {
+  if(RPL_WITH_DAO_ACK) {
   uip_ds6_route_t *re;
   re = uip_ds6_route_head();
   while(re != NULL) {
@@ -116,9 +116,9 @@ find_route_entry_by_dao_ack(uint8_t seq)
     }
     re = uip_ds6_route_next(re);
   }
+  }
   return NULL;
 }
-#endif /* RPL_WITH_DAO_ACK */
 
 #if RPL_WITH_STORING
 /* prepare for forwarding of DAO */
@@ -1031,10 +1031,10 @@ discard:
   uip_clear_buf();
 }
 /*---------------------------------------------------------------------------*/
-#if RPL_WITH_DAO_ACK
 static void
 handle_dao_retransmission(void *ptr)
 {
+  if(RPL_WITH_DAO_ACK) {
   rpl_parent_t *parent;
   uip_ipaddr_t prefix;
   rpl_instance_t *instance;
@@ -1083,8 +1083,8 @@ handle_dao_retransmission(void *ptr)
   instance->my_dao_transmissions++;
   dao_output_target_seq(parent, &prefix,
                         instance->default_lifetime, instance->my_dao_seqno);
+  }
 }
-#endif /* RPL_WITH_DAO_ACK */
 /*---------------------------------------------------------------------------*/
 void
 dao_output(rpl_parent_t *parent, uint8_t lifetime)
@@ -1102,7 +1102,7 @@ dao_output(rpl_parent_t *parent, uint8_t lifetime)
   }
 
   RPL_LOLLIPOP_INCREMENT(dao_sequence);
-#if RPL_WITH_DAO_ACK
+  if(RPL_WITH_DAO_ACK) {
   /* set up the state since this will be the first transmission of DAO */
   /* retransmissions will call directly to dao_output_target_seq */
   /* keep track of my own sending of DAO for handling ack and loss of ack */
@@ -1115,11 +1115,11 @@ dao_output(rpl_parent_t *parent, uint8_t lifetime)
     ctimer_set(&instance->dao_retransmit_timer, RPL_DAO_RETRANSMISSION_TIMEOUT,
                handle_dao_retransmission, parent);
   }
-#else
+  } else {
   /* We know that we have tried to register so now we are assuming
      that we have a down-link - unless this is a zero lifetime one */
   parent->dag->instance->has_downward_route = lifetime != RPL_ZERO_LIFETIME;
-#endif /* RPL_WITH_DAO_ACK */
+  }
 
   /* Sending a DAO with own prefix as target */
   dao_output_target(parent, &prefix, lifetime);
@@ -1189,11 +1189,10 @@ dao_output_target_seq(rpl_parent_t *parent, uip_ipaddr_t *prefix,
 #if RPL_DAO_SPECIFY_DAG
   buffer[pos] |= RPL_DAO_D_FLAG;
 #endif /* RPL_DAO_SPECIFY_DAG */
-#if RPL_WITH_DAO_ACK
+  if(RPL_WITH_DAO_ACK)
   if(lifetime != RPL_ZERO_LIFETIME) {
     buffer[pos] |= RPL_DAO_K_FLAG;
   }
-#endif /* RPL_WITH_DAO_ACK */
   ++pos;
   buffer[pos++] = 0; /* reserved */
   buffer[pos++] = seq_no;
@@ -1250,8 +1249,8 @@ dao_output_target_seq(rpl_parent_t *parent, uip_ipaddr_t *prefix,
 static void
 dao_ack_input(void)
 {
-#if RPL_WITH_DAO_ACK
-
+  if(RPL_WITH_DAO_ACK)
+  {
   uint8_t *buffer;
   uint8_t instance_id;
   uint8_t sequence;
@@ -1337,7 +1336,7 @@ dao_ack_input(void)
       PRINTF("RPL: No route entry found to forward DAO ACK (seqno %u)\n", sequence);
     }
   }
-#endif /* RPL_WITH_DAO_ACK */
+  }
   uip_clear_buf();
 }
 /*---------------------------------------------------------------------------*/
@@ -1345,7 +1344,7 @@ void
 dao_ack_output(rpl_instance_t *instance, uip_ipaddr_t *dest, uint8_t sequence,
                uint8_t status)
 {
-#if RPL_WITH_DAO_ACK
+  if(RPL_WITH_DAO_ACK) {
   unsigned char *buffer;
 
   PRINTF("RPL: Sending a DAO %s with sequence number %d to ", status < 128 ? "ACK" : "NACK", sequence);
@@ -1360,7 +1359,7 @@ dao_ack_output(rpl_instance_t *instance, uip_ipaddr_t *dest, uint8_t sequence,
   buffer[3] = status;
 
   uip_icmp6_send(dest, ICMP6_RPL, RPL_CODE_DAO_ACK, 4);
-#endif /* RPL_WITH_DAO_ACK */
+  }
 }
 /*---------------------------------------------------------------------------*/
 void
