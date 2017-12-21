@@ -471,9 +471,11 @@ $(CONTIKI_PROJECT):
 	@echo "Skipping $@: not for the '$(TARGET)/$(BOARD)' platform!"
 else
 # Build this target.
+ifndef CUSTOM_DEFAULT_TARGET
 # Match-anything pattern rule to allow the project makefiles to
 # abstract from the actual binary name. It needs to contain some
 # command in order to be a rule, not just a prerequisite.
 %: %.$(TARGET)
 	@
+endif
 endif
