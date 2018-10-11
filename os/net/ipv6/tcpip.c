@@ -52,7 +52,9 @@
 
 #if CETIC_6LBR
 #include "cetic-6lbr.h"
+#if CETIC_6LBR_WITH_RPL
 #include "rpl-utils.h"
+#endif
 #endif
 #if CETIC_6LBR_WITH_IP64
 #include "ip64.h"
@@ -552,8 +554,12 @@ get_nexthop(uip_ipaddr_t *addr)
 #endif
 #if CETIC_6LBR_WITH_IP64
         if(ip64_addr_is_ip64(&UIP_IP_BUF->destipaddr)) {
+#if WITH_CONTIKI
 #if UIP_CONF_IPV6_RPL
           rpl_ext_header_remove();
+#endif
+#else
+          NETSTACK_ROUTING.ext_header_remove();
 #endif
           IP64_CONF_UIP_FALLBACK_INTERFACE.output();
           nexthop = NULL;
