@@ -1278,7 +1278,7 @@ uip_process(uint8_t flag)
   uip_ext_bitmap = 0;
 #endif /* UIP_CONF_ROUTER */
 
-#if UIP_IPV6_MULTICAST && UIP_CONF_ROUTER
+#if UIP_IPV6_MULTICAST && (UIP_CONF_ROUTER  || CETIC_6LBR_SMARTBRIDGE)
   process:
 #endif /* UIP_IPV6_MULTICAST && UIP_CONF_ROUTER */
 
