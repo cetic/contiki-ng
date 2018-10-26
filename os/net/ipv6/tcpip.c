@@ -51,9 +51,9 @@
 #include <string.h>
 
 #if CETIC_6LBR
-#include "cetic-6lbr.h"
+#include "6lbr-network.h"
 #if CETIC_6LBR_WITH_RPL
-#include "rpl-utils.h"
+#include "6lbr-rpl.h"
 #endif
 #endif
 #if CETIC_6LBR_WITH_IP64
