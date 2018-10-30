@@ -1174,6 +1174,7 @@ dao_output(rpl_parent_t *parent, uint8_t lifetime)
 #if RPL_DAO_PATH_SEQUENCE
   RPL_LOLLIPOP_INCREMENT(parent->dag->path_sequence);
 #endif
+#if RPL_WITH_DAO_ACK
   if(RPL_WITH_DAO_ACK_TEST) {
   /* set up the state since this will be the first transmission of DAO */
   /* retransmissions will call directly to dao_output_target_seq */
@@ -1192,7 +1193,12 @@ dao_output(rpl_parent_t *parent, uint8_t lifetime)
      that we have a down-link - unless this is a zero lifetime one */
   parent->dag->instance->has_downward_route = lifetime != RPL_ZERO_LIFETIME;
   }
-  /* Sending a DAO with own prefix as target */
+#else
+   /* We know that we have tried to register so now we are assuming
+      that we have a down-link - unless this is a zero lifetime one */
+  parent->dag->instance->has_downward_route = lifetime != RPL_ZERO_LIFETIME;
+#endif
+ /* Sending a DAO with own prefix as target */
   dao_output_target(parent, &prefix, lifetime);
 }
 /*---------------------------------------------------------------------------*/
