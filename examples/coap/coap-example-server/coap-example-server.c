@@ -82,7 +82,10 @@ extern coap_resource_t res_temperature;
 #endif
 
 PROCESS(er_example_server, "Erbium Example Server");
+
+#if !EMBEDDED_EXAMPLE
 AUTOSTART_PROCESSES(&er_example_server);
+#endif
 
 PROCESS_THREAD(er_example_server, ev, data)
 {
